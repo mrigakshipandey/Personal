@@ -1,0 +1,2 @@
+// Variable
+cooldown = 0;
