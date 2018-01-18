@@ -2,15 +2,17 @@
 
 import sys
 import rospy
-from test.srv import * #package name.srv
+from std_msgs.msg import String
 
 def Go(x):
-    	rospy.wait_for_service('sample')
+    	pub = rospy.Publisher('chatter', String, queue_size=10)
+    	rospy.init_node('talker', anonymous=True)
+    
     	try:
-        	attempt_algo = rospy.ServiceProxy('sample', general) #service file used in CMakeList.txt
-        	success= attempt_algo(x)#The service name used as a function
-		return success.y
-    	except rospy.ServiceException, e:
+        	rospy.loginfo(hello_str)
+        	pub.publish(hello_str)
+  	
+	except rospy.ServiceException, e:
         	print "Service call failed: %s"%e
 
 if __name__ == "__main__":
@@ -19,4 +21,3 @@ if __name__ == "__main__":
     	else:
         	sys.exit(1)
     	print "Requesting..."
-	print "Received: %s"%Go(x)

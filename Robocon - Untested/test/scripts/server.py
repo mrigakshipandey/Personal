@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from test.srv import * #package name.srv
+from std_msgs.msg import String
 import rospy
 
 import RPi.GPIO as io
@@ -100,14 +100,9 @@ def handle(req):
 		
 		print "------------"
 
-	#c=str(int(req.x) + 3) #The result
-	print "Returning %s"%1
-    	return generalResponse(1)
-
 def add_two_ints_server():
-    	rospy.init_node('server')
-    	s = rospy.Service('sample', general, handle) #Service Name, CMakeList File, Call
-    	print "Server Ready."
+	rospy.init_node('listener', anonymous=True)
+    	rospy.Subscriber('chatter', String, handle)    	
     	rospy.spin()
 
 if __name__ == "__main__":
