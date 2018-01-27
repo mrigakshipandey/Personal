@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from std_msgs.msg import String
+from sample_2.msg import *
 import rospy
-
+import valuesnpins
 import RPi.GPIO as io
 import Adafruit_MCP3008
 import time
@@ -11,23 +11,30 @@ import time
 def handle(req):
 	# The test algo goes here
 		#Initializing the variables
-	pins=[52,46,48,51]
-
+	#analog input mcp index 4
+	face=req.face
 	# get required pwm here
 	# do not set direction it is to be done by forward(), only maintain pwm
 	temp_pwm=[50,50,50,50]
+	temp_pwm[face]=temp_pwm[face]+req.pwm[face]
+	temp_pwm[(face+2)%4]=temp_pwm[(face+2)%4]+req.pwm[(face+2)%4]
 	# temp
 
 	# pin numbers have to be updated
+	'''
 	m11 =3
 	m21 =11
 	m31 =8
 	m41 =5
-	m12 =4
-	m22 =12
-	m32 =9
-	m42 =6
-	pwm=[50,50,50,50] # get required pwm
+	''' # directions are already setup
+	m12 =motordir[0]
+	m22 =motordir[1]
+	m32 =motordir[2]
+	m42 =motordir[3]
+	pwm=[50,50,50,50]
+	pwm[face]=pwm[face]+req.pwm[face]
+	pwm[(face+2)%4]=pwm[(face+2)%4]+req.pwm[(face+2)%4]
+	# get required pwm
 	thresh=800
 	spd=50
 	kp=3
@@ -44,21 +51,16 @@ def handle(req):
 	io.setmode(io.BCM)
     	io.setwarnings(False)
 
+'''
 	io.setup(m11,io.OUT)
 	io.setup(m21,io.OUT)
 	io.setup(m31,io.OUT)
 	io.setup(m41,io.OUT)
+'''
 	io.setup(m12,io.OUT)
 	io.setup(m22,io.OUT)
 	io.setup(m32,io.OUT)
 	io.setup(m42,io.OUT)
-	for i in range(4):
-		io.setup(pin[i],io.IN)
-	
-	io.output(m11,io.LOW)
-	io.output(m21,io.LOW)
-	io.output(m31,io.LOW)
-	io.output(m41,io.LOW)
 	
 	pm12=io.PWM(m12,90)
 	pm22=io.PWM(m22,90)
@@ -76,13 +78,17 @@ def handle(req):
 	pm42.ChangeDutyCycle(0)
 
 	while(True):
+		i=0
+		for i in range(4):
+			en[i] = mcp[4].read_adc(i*2)
+
 		for _ in range(4):
 			flag[_]=False
 			count[_]=0
 
 		for _ in range(1000):
 			for _1 range(4):
-				vals[_][_1]=io.input(pins[_1])
+				vals[_][_1]=en[_1]
 		
 		for _ in range(1000):
 			for _1 range(4):
@@ -96,8 +102,7 @@ def handle(req):
 		for i in range(4):
       			factor = int((count[i] -40)/kp)
       			temp_pwm[i] = pwm[i] - factor + prev[i]
-      			print "%s-%s=%s|	"%factor%prev[i]%temp_pwm[i]
-      			print " "
+      			print "%s-%s=%s |	"%(factor,prev[i],temp_pwm[i])
 
 		pm12.ChangeDutyCycle(temp_pwm[0])
 		pm22.ChangeDutyCycle(temp_pwm[1])
@@ -106,12 +111,12 @@ def handle(req):
 		
 		print "------------"
 
-def add_two_ints_server():
-	rospy.init_node('listener', anonymous=True)
-    	rospy.Subscriber('chatter', String, handle)    	
+def sub():
+	rospy.init_node('line keep sub', anonymous=True)
+    	rospy.Subscriber('adaptive_pwm', String, handle)    	
     	rospy.spin()
 
 if __name__ == "__main__":
-    	add_two_ints_server()
+    	sub()
 
 
